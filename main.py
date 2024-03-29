@@ -131,6 +131,7 @@ import time
 import logging
 from PIL import Image, ImageDraw, ImageFont
 import threading
+import subprocess
 import os
 
 app = Flask(__name__)
@@ -176,6 +177,21 @@ def update_display(message):
         wrapped_text = textwrap.fill(message, width=25)
         draw.text((10, 10), wrapped_text, font=font, fill=text_color)
         
+        # Add arrow symbol at the bottom right corner
+        arrow = [
+            "     *",
+            "    **",
+            "   ***",
+            "  ****",
+            " *****",
+            "******"
+        ]
+        arrow_height = len(arrow)
+        arrow_width = len(arrow[0])
+        
+        for i, line in enumerate(arrow):
+            draw.text((epd.width - arrow_width * 8, epd.height - arrow_height * 15 + i * 15), line, font=font, fill=text_color)
+        
         # Display the image on the e-ink display
         epd.display(epd.getbuffer(image))
 
@@ -202,17 +218,13 @@ def get_todo_items():
         print("Failed to fetch to-do items")
         return []
 
-def create_todo_items_text(todo_items, page_number, items_per_page):
+def create_todo_items_text(todo_items):
     todo_items_text = ''
-    
-    start_index = (page_number - 1) * items_per_page
-    end_index = min(start_index + items_per_page, len(todo_items))
     
     if todo_items:
         todo_items_text += 'To-Do Items:\n\n'
 
-        for i in range(start_index, end_index):
-            item = todo_items[i]
+        for item in todo_items:
             class_name = item['assignment'].get('course', {}).get('name', 'Unknown Course')
             assignment_name = item['assignment'].get('name', 'Unknown Assignment')
             due_date_str = item['assignment'].get('due_at', '')
@@ -228,22 +240,14 @@ def create_todo_items_text(todo_items, page_number, items_per_page):
     print("To-do items text:", todo_items_text)
     return todo_items_text
 
-def navigate_todo_items(page_number, max_pages):
-    # Display the next page of to-do items or loop back to the first page if on the last page
-    page_number = (page_number + 1) % (max_pages + 1)
-    return page_number if page_number != 0 else 1  # Ensure page_number is not 0
 
 if __name__ == "__main__":
-    page_number = 1
-    items_per_page = 5  # Adjust as needed
-    max_pages = 5  # Adjust as needed
-    
     while True:
         todo_items = get_todo_items()
         
         print("To-do items:", todo_items)
 
-        todo_items_text = create_todo_items_text(todo_items, page_number, items_per_page)
+        todo_items_text = create_todo_items_text(todo_items)
         
         print("To-do items text:", todo_items_text)
 
@@ -251,10 +255,6 @@ if __name__ == "__main__":
             update_display(todo_items_text)
         else:
             update_display("No to-do items available.")
-
-        # Wait for touch input to navigate to the next page
-        if GT_Dev.Touch == 1:
-            page_number = navigate_todo_items(page_number, max_pages)
 
         # Wait for 2 minutes before checking again
         print("Waiting for 2 minutes before checking again...")
