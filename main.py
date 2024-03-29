@@ -68,33 +68,31 @@ def get_assignments(course_id):
         'Authorization': f'Bearer {ACCESS_TOKEN}',
     }
 
-    print("Fetching assignments from Canvas API...")
+    print("Fetching assignments from Canvas API for course:", course_id)
     # Fetch the list of assignments for the specified course
     response = requests.get(
         f'{CANVAS_API_URL}/courses/{course_id}/assignments', headers=headers)
 
     if response.status_code == 200:
         assignments = response.json()
+        print("Fetched assignments:", assignments)
         today = datetime.now().date()
-        tomorrow = today + timedelta(days=1)
-        day_after_tomorrow = today + timedelta(days=2)
+        next_seven_days = [today + timedelta(days=i) for i in range(7)]
         
+        print("Next seven days:", next_seven_days)
         
-        print("Today:", today)
-        print("Tomorrow:", tomorrow)
-        print("Day after tomorrow:" ,day_after_tomorrow)
-        
-        # Filter assignments due today and for the next three days
+        # Filter assignments due today or for the next seven days
         due_assignments = [
             assignment for assignment in assignments
             if 'due_at' in assignment and assignment['due_at'] is not None
-            and (datetime.strptime(assignment['due_at'], '%Y-%m-%dT%H:%M:%SZ').date() in [today,tomorrow, day_after_tomorrow])
+            and (datetime.strptime(assignment['due_at'], '%Y-%m-%dT%H:%M:%SZ').date() in next_seven_days)
         ]
         
         return due_assignments
     else: 
         print("Failed to fetch assignments")
         return []
+
 
 def create_assignments_text(assignments):
     assignments_text = ''
