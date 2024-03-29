@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import requests
 import textwrap
 from flask import Flask, request
-from flask_mail import Mail, Message
 from TP_lib import gt1151
 from TP_lib import epd2in13_V4 as epd2in13
 import time
@@ -13,12 +12,10 @@ import subprocess
 import os
 
 app = Flask(__name__)
-mail = Mail(app)
 
 # Canvas API configuration
 CANVAS_API_URL = 'https://canvas.uh.edu/api/v1'
 ACCESS_TOKEN = '23057~o8gIcEuxleDiH3vOQCQT2AxWZlceuIdRusglN94Rf1VC7X83PD3K3ppYGIGiMlay'
-# COURSE_ID = '8637'
 COURSE_IDS = ['8637', '7398', '10778', '9245']
 
 # Initialize e-ink display
@@ -63,7 +60,7 @@ def update_display(message):
         print("Display updated successfully:", message)
 
     except Exception as e:
-        print("Error updating display:", e)
+        print("Error updating display:", e) 
 
 def get_assignments(course_id):
     headers = {
@@ -78,31 +75,46 @@ def get_assignments(course_id):
     if response.status_code == 200:
         assignments = response.json()
         today = datetime.now().date()
+        day_after_tomorrow = today + timedelta(days=2)
 
-        # Filter assignments due today and for the next three days
+        print("Today:", today)
+        print("Day after tomorrow:", day_after_tomorrow)
+
+        # Filter assignments due today or two days from now
         due_assignments = [
             assignment for assignment in assignments
             if 'due_at' in assignment and assignment['due_at'] is not None
-            and today <= datetime.strptime(assignment['due_at'], '%Y-%m-%dT%H:%M:%SZ').date() <= today + timedelta(days=5)
+            and (datetime.strptime(assignment['due_at'], '%Y-%m-%dT%H:%M:%SZ').date() == today
+                 or datetime.strptime(assignment['due_at'], '%Y-%m-%dT%H:%M:%SZ').date() == day_after_tomorrow)
         ]
 
-        return due_assignments
+        print("Due assignments:", due_assignments)
 
-    return []
+        return due_assignments
+    else: 
+        print("Failed to fetch assignments")
+        return []
 
 def create_assignments_text(assignments):
     assignments_text = ''
-
+    print("Assignments:", assignments)
     if assignments:
-        assignments_text += 'Assignments due today and for the next 5 days:\n\n'
+        assignments_text += 'Assignments due today and for the next 3 days:\n\n'
 
-        for assignment in assignments:
-            assignment_text = f"• {assignment['name']} \n\n"
-            assignments_text += textwrap.fill(assignment_text,
-                                              width=25) + '\n'
-    else:
-        assignments_text = 'No assignments due today and for the next 3 days.'
-
+        for assign in assignments:
+            print("Processing Assigment:", assign)
+            due_date = datetime.strptime(assign['due_at'],'%Y-%m-%dT%H:%M:%SZ').date()
+            
+            # Format the date 
+            if due_date == datetime.now().date():
+                due_date_text = datetime.strptime(assign['due_at'],'%Y-%m-%dT%H:%M:%SZ').strftime('%H:%M') + " today"
+            else: 
+                due_date_text = due_date.strftime('%m/%d/%Y')
+                
+            assignment_text = f"* {assign['name']} (Due: {due_date_text})\n"
+            print("Assignment Text:", assignment_text)
+            assignments_text += assignment_text
+            
     return assignments_text
 
 if __name__ == "__main__":
@@ -112,12 +124,13 @@ if __name__ == "__main__":
         for course_id in COURSE_IDS:
             assignments = get_assignments(course_id)
             all_assignments.extend(assignments)
+            
+        print("All Assigments:", all_assignments)
 
-        assignments_text = ''
-
-        for assignment in all_assignments:
-            assignments_text += f"{assignment['name']} \n\n"
-
+        assignments_text = create_assignments_text(all_assignments)
+        
+        print("Assignments text:", assignments_text)
+        
         if assignments_text:
             update_display(assignments_text)
         else:
@@ -125,4 +138,4 @@ if __name__ == "__main__":
 
         # Wait for 2 minutes before checking again
         print("Waiting for 2 minutes before checking again...")
-        time.sleep(120)  # Sleep for 2 minutes (120 seconds)
+        time.sleep(300)  # Sleep for 2 minutes (120 seconds)
