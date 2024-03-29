@@ -169,7 +169,7 @@ def update_display(message):
         draw = ImageDraw.Draw(image)
         
         # Set font and text color
-        font_size = 20
+        font_size = 10
         text_color = 0  # Black
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         
@@ -227,4 +227,35 @@ def create_todo_items_text(todo_items):
         for item in todo_items:
             class_name = item['assignment'].get('course', {}).get('name', 'Unknown Course')
             assignment_name = item['assignment'].get('name', 'Unknown Assignment')
-            due_date_str = item['as
+            due_date_str = item['assignment'].get('due_at', '')
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M:%SZ') if due_date_str else None
+            formatted_due_date = due_date.strftime('%m/%d/%Y') if due_date else 'Unknown Date'
+            
+            item_text = f"* {class_name} - {assignment_name} (Due: {formatted_due_date})\n"
+            todo_items_text += item_text
+    else:
+        print("No to-do items available.")
+        todo_items_text = "No to-do items available."
+        
+    print("To-do items text:", todo_items_text)
+    return todo_items_text
+
+
+if __name__ == "__main__":
+    while True:
+        todo_items = get_todo_items()
+        
+        print("To-do items:", todo_items)
+
+        todo_items_text = create_todo_items_text(todo_items)
+        
+        print("To-do items text:", todo_items_text)
+
+        if todo_items_text:
+            update_display(todo_items_text)
+        else:
+            update_display("No to-do items available.")
+
+        # Wait for 2 minutes before checking again
+        print("Waiting for 2 minutes before checking again...")
+        time.sleep(300)  # Sleep for 2 minutes (300 seconds)
