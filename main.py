@@ -96,26 +96,28 @@ def get_assignments(course_id):
 
 def create_assignments_text(assignments):
     assignments_text = ''
-    print("Assignments:", assignments)
+    
     if assignments:
-        assignments_text += 'Assignments due today and for the next 3 days:\n\n'
+        assignments_text += 'Assignments due today and for the next 7 days:\n\n'
+
         for assign in assignments:
-            print("Processing Assignment:", assign)
             due_date = datetime.strptime(assign['due_at'],'%Y-%m-%dT%H:%M:%SZ').date()
-            print("Due Date:", due_date)
             
             # Format the date 
             if due_date == datetime.now().date():
                 due_date_text = datetime.strptime(assign['due_at'],'%Y-%m-%dT%H:%M:%SZ').strftime('%H:%M') + " today"
             else: 
                 due_date_text = due_date.strftime('%m/%d/%Y')
-            print("Due Date Text:", due_date_text)
                 
             assignment_text = f"* {assign['name']} (Due: {due_date_text})\n"
-            print("Assignment Text:", assignment_text)
             assignments_text += assignment_text
-    print("Assignments Text:", assignments_text)
+    else:
+        print("No assignments available.")
+        assignments_text = "No assignments available for the next 7 days."
+        
+    print("Assignments text:", assignments_text)
     return assignments_text
+
 
 if __name__ == "__main__":
     while True:
