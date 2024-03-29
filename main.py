@@ -158,7 +158,7 @@ def pthread_irq():
             GT_Dev.Touch = 0
     print("thread:exit")
 
-def update_display(message):
+def update_display(message, page_num, max_pages):
     try:
         print("Updating display...")
         epd.init(epd.FULL_UPDATE)
@@ -169,7 +169,7 @@ def update_display(message):
         draw = ImageDraw.Draw(image)
         
         # Set font and text color
-        font_size = 10
+        font_size = 20
         text_color = 0  # Black
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         
@@ -191,6 +191,10 @@ def update_display(message):
         
         for i, line in enumerate(arrow):
             draw.text((epd.width - arrow_width * 8, epd.height - arrow_height * 15 + i * 15), line, font=font, fill=text_color)
+        
+        # Display current page and max pages
+        page_text = f"Page {page_num} of {max_pages}"
+        draw.text((10, epd.height - arrow_height * 15), page_text, font=font, fill=text_color)
         
         # Display the image on the e-ink display
         epd.display(epd.getbuffer(image))
@@ -218,13 +222,17 @@ def get_todo_items():
         print("Failed to fetch to-do items")
         return []
 
-def create_todo_items_text(todo_items):
+def create_todo_items_text(todo_items, page_num, max_items_per_page):
+    start_index = (page_num - 1) * max_items_per_page
+    end_index = start_index + max_items_per_page
+    current_page_items = todo_items[start_index:end_index]
+    
     todo_items_text = ''
     
-    if todo_items:
+    if current_page_items:
         todo_items_text += 'To-Do Items:\n\n'
 
-        for item in todo_items:
+        for item in current_page_items:
             class_name = item['assignment'].get('course', {}).get('name', 'Unknown Course')
             assignment_name = item['assignment'].get('name', 'Unknown Assignment')
             due_date_str = item['assignment'].get('due_at', '')
@@ -242,19 +250,24 @@ def create_todo_items_text(todo_items):
 
 
 if __name__ == "__main__":
+    max_items_per_page = 2
+    page_num = 1
+    
     while True:
         todo_items = get_todo_items()
         
         print("To-do items:", todo_items)
 
-        todo_items_text = create_todo_items_text(todo_items)
+        max_pages = (len(todo_items) + max_items_per_page - 1) // max_items_per_page
+        
+        todo_items_text = create_todo_items_text(todo_items, page_num, max_items_per_page)
         
         print("To-do items text:", todo_items_text)
 
         if todo_items_text:
-            update_display(todo_items_text)
+            update_display(todo_items_text, page_num, max_pages)
         else:
-            update_display("No to-do items available.")
+            update_display("No to-do items available.", page_num, max_pages)
 
         # Wait for 2 minutes before checking again
         print("Waiting for 2 minutes before checking again...")
