@@ -169,7 +169,7 @@ def update_display(message, page_num, max_pages):
         draw = ImageDraw.Draw(image)
         
         # Set font and text color
-        font_size = 20
+        font_size = 10
         text_color = 0  # Black
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         
