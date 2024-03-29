@@ -87,11 +87,13 @@ def create_todo_items_text(todo_items):
         todo_items_text += 'To-Do Items:\n\n'
 
         for item in todo_items:
-            class_name = item['assignment']['course']['name']
-            due_date = datetime.strptime(item['assignment']['due_at'], '%Y-%m-%dT%H:%M:%SZ')
-            formatted_due_date = due_date.strftime('%m/%d/%Y')
+            class_name = item['assignment'].get('course', {}).get('name', 'Unknown Course')
+            assignment_name = item['assignment'].get('name', 'Unknown Assignment')
+            due_date_str = item['assignment'].get('due_at', '')
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M:%SZ') if due_date_str else None
+            formatted_due_date = due_date.strftime('%m/%d/%Y') if due_date else 'Unknown Date'
             
-            item_text = f"* {class_name} - {item['assignment']['name']} (Due: {formatted_due_date})\n"
+            item_text = f"* {class_name} - {assignment_name} (Due: {formatted_due_date})\n"
             todo_items_text += item_text
     else:
         print("No to-do items available.")
