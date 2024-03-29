@@ -20,6 +20,7 @@ ACCESS_TOKEN = '23057~o8gIcEuxleDiH3vOQCQT2AxWZlceuIdRusglN94Rf1VC7X83PD3K3ppYGI
 COURSE_IDS = ['8637', '7398', '10778', '9245']
 
 # Function to update e-Ink display with text
+# Function to update e-Ink display with text
 def update_display(message):
     try:
         print("Updating display...")
@@ -36,7 +37,6 @@ def update_display(message):
 
         # Set font and text color
         font_size = 20
-        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         text_color = 0  # Black
 
         # Fill the entire display with white
@@ -44,7 +44,7 @@ def update_display(message):
 
         # Wrap text and draw on the image
         wrapped_text = textwrap.fill(message, width=25)
-        draw.text((10, 10), wrapped_text, font=font, fill=text_color)
+        draw.text((10, 10), wrapped_text, fill=text_color)
 
         # Display the image on the e-ink display
         epd.display(epd.getbuffer(HBlackimage))
