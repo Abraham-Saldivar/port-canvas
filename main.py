@@ -3,11 +3,14 @@ import requests
 import textwrap
 from flask import Flask, request
 from flask_mail import Mail, Message
-from waveshare_epd import epd2in13
-from PIL import Image, ImageDraw, ImageFont
-import schedule
+from TP_lib import gt1151
+from TP_lib import epd2in13_V4 as epd2in13
 import time
+import logging
+from PIL import Image, ImageDraw, ImageFont
+import threading
 import subprocess
+import os
 
 app = Flask(__name__)
 mail = Mail(app)
@@ -16,59 +19,58 @@ mail = Mail(app)
 CANVAS_API_URL = 'https://canvas.uh.edu/api/v1'
 ACCESS_TOKEN = '23057~o8gIcEuxleDiH3vOQCQT2AxWZlceuIdRusglN94Rf1VC7X83PD3K3ppYGIGiMlay'
 # COURSE_ID = '8637'
-
 COURSE_IDS = ['8637', '7398', '10778', '9245']
 
-# Function to update e-Ink display with text
-# Function to update e-Ink display with text
+# Initialize e-ink display
+epd = epd2in13.EPD()
+gt = gt1151.GT1151()
+GT_Dev = gt1151.GT_Development()
+GT_Old = gt1151.GT_Development()
+
+logging.basicConfig(level=logging.DEBUG)
+flag_t = 1
+
+def pthread_irq():
+    print("pthread running")
+    while flag_t == 1:
+        if gt.digital_read(gt.INT) == 0:
+            GT_Dev.Touch = 1
+        else:
+            GT_Dev.Touch = 0
+    print("thread:exit")
+
 def update_display(message):
     try:
         print("Updating display...")
-        # Initialize the e-ink display
-        epd = epd2in13.EPD_2IN13_V2()
-
-        print("Display initialized.")
-
-        # Create a blank image with white background
-        HBlackimage = Image.new('1', (epd.height, epd.width), 255)
-
-        # Initialize drawing object
-        draw = ImageDraw.Draw(HBlackimage)
-
+        epd.init(epd.FULL_UPDATE)
+        epd.Clear(0xFF)
+        
+        # Initialize image
+        image = Image.new('1', (epd.height, epd.width), 255)
+        draw = ImageDraw.Draw(image)
+        
         # Set font and text color
         font_size = 20
         text_color = 0  # Black
 
-        # Fill the entire display with white
-        draw.rectangle([(0, 0), (epd.height, epd.width)], fill=255)
-
         # Wrap text and draw on the image
         wrapped_text = textwrap.fill(message, width=25)
         draw.text((10, 10), wrapped_text, fill=text_color)
-
+        
         # Display the image on the e-ink display
-        epd.display(epd.getbuffer(HBlackimage))
+        epd.display(epd.getbuffer(image))
 
         print("Display updated successfully:", message)
 
     except Exception as e:
         print("Error updating display:", e)
 
-# Function to check internet connection
-def check_internet_connection():
-    try:
-        # Attempt to ping a reliable website (e.g., google.com)
-        subprocess.run(['ping', '-c', '1', 'google.com'], check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-# Function to get assignments from Canvas API
 def get_assignments(course_id):
     headers = {
         'Authorization': f'Bearer {ACCESS_TOKEN}',
     }
 
+    print("Fetching assignments from Canvas API...")
     # Fetch the list of assignments for the specified course
     response = requests.get(
         f'{CANVAS_API_URL}/courses/{course_id}/assignments', headers=headers)
@@ -88,7 +90,6 @@ def get_assignments(course_id):
 
     return []
 
-# Function to create an image with assignments
 def create_assignments_text(assignments):
     assignments_text = ''
 
@@ -117,14 +118,11 @@ if __name__ == "__main__":
         for assignment in all_assignments:
             assignments_text += f"{assignment['name']} \n\n"
 
-        # Check internet connection
-        if check_internet_connection():
-            if assignments_text:
-                update_display(assignments_text)
-            else:
-                update_display("No assignments available.")
+        if assignments_text:
+            update_display(assignments_text)
         else:
-            update_display("No internet connection.")
+            update_display("No assignments available.")
 
         # Wait for 2 minutes before checking again
+        print("Waiting for 2 minutes before checking again...")
         time.sleep(120)  # Sleep for 2 minutes (120 seconds)
