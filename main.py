@@ -22,15 +22,14 @@ COURSE_IDS = ['8637', '7398', '10778', '9245']
 # Function to update e-Ink display with text
 def update_display(message):
     try:
+        print("Updating display...")
         # Initialize the e-ink display
-        epd = epd2in13.EPD()
-        epd.init()
+        epd = epd2in13.EPD_2IN13_V2()
 
-        # Clear the display
-        epd.Clear()
+        print("Display initialized.")
 
         # Create a blank image with white background
-        HBlackimage = Image.new('1', (epd.width, epd.height), 255)
+        HBlackimage = Image.new('1', (epd.height, epd.width), 255)
 
         # Initialize drawing object
         draw = ImageDraw.Draw(HBlackimage)
@@ -40,12 +39,17 @@ def update_display(message):
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         text_color = 0  # Black
 
+        # Fill the entire display with white
+        draw.rectangle([(0, 0), (epd.height, epd.width)], fill=255)
+
         # Wrap text and draw on the image
         wrapped_text = textwrap.fill(message, width=25)
         draw.text((10, 10), wrapped_text, font=font, fill=text_color)
 
         # Display the image on the e-ink display
         epd.display(epd.getbuffer(HBlackimage))
+
+        print("Display updated successfully:", message)
 
     except Exception as e:
         print("Error updating display:", e)
