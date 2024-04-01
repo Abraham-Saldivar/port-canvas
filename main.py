@@ -253,7 +253,7 @@ def update_display():
 def timer_thread():
     while True:
         update_display()
-        time.sleep(120)  # Sleep for 120 seconds (2 minutes)
+        time.sleep(30)  # Sleep for 120 seconds (2 minutes)
 
 # Initialize verse index
 current_verse_index = -1
