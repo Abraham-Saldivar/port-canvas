@@ -153,6 +153,7 @@ from datetime import datetime, timedelta
 from TP_lib import gt1151
 from TP_lib import epd2in13_V4 as epd2in13
 from PIL import Image, ImageDraw, ImageFont
+import textwrap
 import time
 import threading
 
