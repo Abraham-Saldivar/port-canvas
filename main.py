@@ -386,16 +386,16 @@ def update_display():
         text_color = 0  # Black
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         
-        # Get the next verse or word
         global current_verse_index
         current_verse_index = (current_verse_index + 1) % len(verses)
         current_item = verses[current_verse_index]
-        if isinstance(current_item, str):
+        
+        if current_verse_index % 2 == 0:
             # Display verse
             wrapped_text = textwrap.fill(current_item, width=25)
             draw.text((10, 10), wrapped_text, font=font, fill=text_color)
         else:
-            # Display word
+            # Display random word
             word, definition = get_random_word()
             draw.text((10, 10), f"Word of the Day:", font=font, fill=text_color)
             draw.text((10, 40), f"{word}:", font=font, fill=text_color)
