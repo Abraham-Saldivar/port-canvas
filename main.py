@@ -365,34 +365,12 @@ def get_random_word():
     return word_data['word'], word_data['definition']
 
 
-def display_word(word, definition):
-    try:
-        print("Displaying word:", word)
-        epd.init(epd.FULL_UPDATE)
-        epd.Clear(0xFF)
-        
-        image = Image.new('1', (epd.height, epd.width), 255)
-        draw = ImageDraw.Draw(image)
-        
-        font_size = 20
-        font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
-        
-        draw.text((10, 10), f"Word of the Day:", font=font, fill=0)
-        draw.text((10, 40), f"{word}:", font=font, fill=0)
-        draw.text((10, 70), f"{definition}", font=font, fill=0)
-        
-        epd.display(epd.getbuffer(image))
-        print("Word displayed successfully")
-    except Exception as e:
-        print("Error displaying word:", e)
-
 # Initialize e-ink display
 epd = epd2in13.EPD()
 gt = gt1151.GT1151()
 GT_Dev = gt1151.GT_Development()
 GT_Old = gt1151.GT_Development()
-
-# Function to update display with the next verse
+# Function to update display with the next verse or word
 def update_display():
     try:
         print("Updating display...")
@@ -408,22 +386,60 @@ def update_display():
         text_color = 0  # Black
         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
         
-        # Get the next verse
+        # Get the next verse or word
         global current_verse_index
         current_verse_index = (current_verse_index + 1) % len(verses)
-        current_verse = verses[current_verse_index]
-        
-        # Wrap text and draw on the image
-        wrapped_text = textwrap.fill(current_verse, width=25)
-        draw.text((10, 10), wrapped_text, font=font, fill=text_color)
+        current_item = verses[current_verse_index]
+        if isinstance(current_item, str):
+            # Display verse
+            wrapped_text = textwrap.fill(current_item, width=25)
+            draw.text((10, 10), wrapped_text, font=font, fill=text_color)
+        else:
+            # Display word
+            word, definition = current_item
+            draw.text((10, 10), f"Word of the Day:", font=font, fill=text_color)
+            draw.text((10, 40), f"{word}:", font=font, fill=text_color)
+            draw.text((10, 70), f"{definition}", font=font, fill=text_color)
         
         # Display the image on the e-ink display
         epd.display(epd.getbuffer(image))
 
-        print("Display updated successfully with verse:", current_verse)
+        print("Display updated successfully")
 
     except Exception as e:
         print("Error updating display:", e)
+# Function to update display with the next verse
+# def update_display():
+#     try:
+#         print("Updating display...")
+#         epd.init(epd.FULL_UPDATE)
+#         epd.Clear(0xFF)
+        
+#         # Initialize image
+#         image = Image.new('1', (epd.height, epd.width), 255)
+#         draw = ImageDraw.Draw(image)
+        
+#         # Set font and text color
+#         font_size = 12
+#         text_color = 0  # Black
+#         font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', font_size)
+        
+#         # Get the next verse
+#         global current_verse_index
+#         current_verse_index = (current_verse_index + 1) % len(verses)
+#         current_verse = verses[current_verse_index]
+        
+#         # Wrap text and draw on the image
+#         wrapped_text = textwrap.fill(current_verse, width=25)
+#         draw.text((10, 10), wrapped_text, font=font, fill=text_color)
+        
+#         # Display the image on the e-ink display
+#         epd.display(epd.getbuffer(image))
+
+#         print("Display updated successfully with verse:", current_verse)
+
+#     except Exception as e:
+#         print("Error updating display:", e)
 
 # Timer function to update display every 120 seconds
 def timer_thread():
