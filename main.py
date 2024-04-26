@@ -397,9 +397,10 @@ def update_display():
         else:
             # Display random word
             word, definition = get_random_word()
+            wrapped_definition = textwrap.fill(definition, width=25)
             draw.text((10, 10), f"Word of the Day:", font=font, fill=text_color)
             draw.text((10, 40), f"{word}:", font=font, fill=text_color)
-            draw.text((10, 70), f"{definition}", font=font, fill=text_color)
+            draw.text((10, 70), f"{wrapped_definition}", font=font, fill=text_color)
         
         # Display the image on the e-ink display
         epd.display(epd.getbuffer(image))
