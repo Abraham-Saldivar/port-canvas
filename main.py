@@ -396,7 +396,7 @@ def update_display():
             draw.text((10, 10), wrapped_text, font=font, fill=text_color)
         else:
             # Display word
-            word, definition = current_item
+            word, definition = get_random_word()
             draw.text((10, 10), f"Word of the Day:", font=font, fill=text_color)
             draw.text((10, 40), f"{word}:", font=font, fill=text_color)
             draw.text((10, 70), f"{definition}", font=font, fill=text_color)
